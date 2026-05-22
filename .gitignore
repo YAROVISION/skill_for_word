@@ -1,0 +1,24 @@
+# Local env files
+.env
+.env.local
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Large data dumps (exceeding GitHub's 100MB limit)
+base_of_word/*.sql
+base_of_word/*.xlsx
+base_of_word/*.zip
+
+# Caches and temporary files
+classification_cache.json
+relationship_cache.json
+scratch/
+.DS_Store
+
+# Generated Obsidian Vault (too large for Git, recommended to open locally)
+obsidian_words_db/

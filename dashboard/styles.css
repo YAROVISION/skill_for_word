@@ -1,0 +1,226 @@
+/* CSS Styles for Word Abstraction Level Dashboard */
+/* Macha Tea UI Theme: Warm Sand/Beige (#EDE8D9, #FFF4DE) and Matcha Green (#4B6B40, #87A96B) */
+
+/* Global style improvements */
+.main-title {
+    font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+    color: #4B6B40;
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.subtitle {
+    font-family: 'Inter', sans-serif;
+    color: #8C8273;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+/* Sidebar Custom Styling */
+section[data-testid="stSidebar"] {
+    background-color: #f7f4ed !important;
+    border-right: 1px solid #e2dcd0 !important;
+}
+
+section[data-testid="stSidebar"] .stMarkdown h3 {
+    color: #4B6B40 !important;
+    font-family: 'Outfit', sans-serif;
+}
+
+section[data-testid="stSidebar"] .stMarkdown p {
+    color: #736b5e !important;
+}
+
+/* Custom cards for metrics */
+div[data-testid="metric-container"] {
+    background-color: #FAF8F5 !important;
+    border: 1px solid #E6E0D5 !important;
+    padding: 20px 24px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 6px rgba(135, 169, 107, 0.05) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+div[data-testid="metric-container"]:hover {
+    transform: translateY(-4px) !important;
+    border-color: #87A96B !important;
+    box-shadow: 0 10px 15px rgba(75, 107, 64, 0.08) !important;
+}
+
+div[data-testid="metric-container"] label {
+    color: #8C8273 !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
+    color: #4B6B40 !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 1.8rem !important;
+    font-weight: 700 !important;
+}
+
+/* Status badge pills */
+.status-pill {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.status-pill-green {
+    background-color: #E8F0E5;
+    color: #3b5c30;
+    border-color: #c9dcbd;
+}
+
+.status-pill-orange {
+    background-color: #FFF4DE;
+    color: #B27B1E;
+    border-color: #FFE6BD;
+}
+
+.status-pill-red {
+    background-color: #FDE8E8;
+    color: #C81E1E;
+    border-color: #F8B4B4;
+}
+
+.status-pill-blue {
+    background-color: #E1EFFE;
+    color: #1E429F;
+    border-color: #A4CAFE;
+}
+
+/* Streamlit Button Customizations */
+button[kind="primary"] {
+    background-color: #4B6B40 !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 6px rgba(75, 107, 64, 0.2) !important;
+}
+
+button[kind="primary"]:hover {
+    background-color: #3A5332 !important;
+    box-shadow: 0 6px 12px rgba(75, 107, 64, 0.3) !important;
+    transform: translateY(-1px) !important;
+}
+
+button[kind="secondary"] {
+    background-color: #FAF8F5 !important;
+    color: #736b5e !important;
+    border: 1px solid #E6E0D5 !important;
+    border-radius: 12px !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+}
+
+button[kind="secondary"]:hover {
+    border-color: #8C8273 !important;
+    color: #4B6B40 !important;
+    background-color: #F3EFE9 !important;
+}
+
+/* Custom container for real-time logs */
+.log-container {
+    border: 1px solid #E6E0D5;
+    border-radius: 14px;
+    padding: 16px;
+    background-color: #FAF8F5;
+    height: 380px;
+    overflow-y: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    color: #4A453E;
+    line-height: 1.5;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Form and inputs style adjustments */
+.stTextInput input, .stSelectbox div[role="button"], .stNumberInput input {
+    border-radius: 10px !important;
+    border: 1px solid #E6E0D5 !important;
+    background-color: #FAF8F5 !important;
+}
+
+.stTextInput input:focus, .stSelectbox div[role="button"]:focus {
+    border-color: #87A96B !important;
+    box-shadow: 0 0 0 1px #87A96B !important;
+}
+
+/* Custom green accent for progress bar */
+div[data-testid="stProgressBar"] > div > div {
+    background-color: #4B6B40 !important;
+}
+
+/* Dark mode styling overrides for when the user is in dark mode */
+@media (prefers-color-scheme: dark) {
+    section[data-testid="stSidebar"] {
+        background-color: #1c1b18 !important;
+        border-right: 1px solid #2e2c28 !important;
+    }
+    section[data-testid="stSidebar"] .stMarkdown p {
+        color: #bfaea2 !important;
+    }
+    div[data-testid="metric-container"] {
+        background-color: #24221f !important;
+        border: 1px solid #3d3a33 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15) !important;
+    }
+    div[data-testid="metric-container"]:hover {
+        border-color: #4B6B40 !important;
+        box-shadow: 0 10px 15px rgba(0,0,0,0.2) !important;
+    }
+    div[data-testid="metric-container"] label {
+        color: #A69E92 !important;
+    }
+    div[data-testid="metric-container"] div[data-testid="stMetricValue"] {
+        color: #87A96B !important;
+    }
+    .status-pill-green {
+        background-color: #243321;
+        color: #a3c99a;
+        border-color: #3b5c30;
+    }
+    .status-pill-orange {
+        background-color: #3d2d14;
+        color: #e5b158;
+        border-color: #664b18;
+    }
+    .status-pill-red {
+        background-color: #3f1a1a;
+        color: #fca5a5;
+        border-color: #9b1c1c;
+    }
+    .log-container {
+        background-color: #171614;
+        border-color: #2e2c28;
+        color: #d1c7bc;
+    }
+    .stTextInput input, .stSelectbox div[role="button"], .stNumberInput input {
+        border-color: #3d3a33 !important;
+        background-color: #24221f !important;
+        color: #FAF8F5 !important;
+    }
+    button[kind="secondary"] {
+        background-color: #24221f !important;
+        color: #d1c7bc !important;
+        border: 1px solid #3d3a33 !important;
+    }
+    button[kind="secondary"]:hover {
+        border-color: #8C8273 !important;
+        color: #87A96B !important;
+        background-color: #2d2a26 !important;
+    }
+}
