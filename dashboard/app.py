@@ -19,6 +19,8 @@ st.set_page_config(
 # Paths relative to dashboard directory
 DASHBOARD_DIR = os.path.dirname(os.path.abspath(__file__))
 SCRIPT_DIR = os.path.dirname(DASHBOARD_DIR)
+if SCRIPT_DIR not in sys.path:
+    sys.path.append(SCRIPT_DIR)
 SCRATCH_DIR = os.path.join(SCRIPT_DIR, "scratch")
 os.makedirs(SCRATCH_DIR, exist_ok=True)
 
@@ -208,6 +210,33 @@ def read_progress(progress_file):
             pass
     return None
 
+def check_neo4j_connection():
+    uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    user = os.getenv("NEO4J_USER", "neo4j")
+    password = os.getenv("NEO4J_PASSWORD", "password")
+    try:
+        from neo4j import GraphDatabase
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+        driver.verify_connectivity()
+        driver.close()
+        return True, "Підключено"
+    except ImportError:
+        return False, "Драйвер neo4j не встановлено"
+    except Exception as e:
+        return False, f"Помилка з'єднання: {str(e)[:100]}"
+
+def check_telegram_bot_status():
+    pid_file = os.path.join(SCRATCH_DIR, "telegram_bot.pid")
+    if os.path.exists(pid_file):
+        try:
+            with open(pid_file, "r") as f:
+                pid = int(f.read().strip())
+            if is_process_running(pid):
+                return True, pid
+        except:
+            pass
+    return False, None
+
 # Sidebar Configuration
 st.sidebar.markdown("### 📝 Word Classifier GUI")
 st.sidebar.caption("Панель керування та аналітики")
@@ -377,7 +406,156 @@ with col4:
 
 st.markdown("---")
 
-tab_run, tab_relationship, tab_explorer, tab_analytics = st.tabs(["🚀 Класифікація слів", "🔗 Зв'язування рівнів", "🔍 Перегляд Кешу", "📊 Аналітика"])
+tab_agents, tab_import, tab_run, tab_relationship, tab_explorer, tab_analytics = st.tabs(["🤖 Агентне керування", "📝 Імпорт тексту", "🚀 Класифікація слів", "🔗 Зв'язування рівнів", "🔍 Перегляд Кешу", "📊 Аналітика"])
+
+with tab_agents:
+    st.subheader("🤖 Мультиагентна система (Orchestrator)")
+    
+    # Check statuses
+    import asyncio
+    neo4j_ok, neo4j_status = check_neo4j_connection()
+    tg_ok, tg_pid = check_telegram_bot_status()
+    
+    col_status1, col_status2 = st.columns(2)
+    with col_status1:
+        neo4j_color = "green" if neo4j_ok else "red"
+        st.markdown(f"**Neo4j Database:** :{neo4j_color}[{neo4j_status}]")
+    with col_status2:
+        tg_status_text = f"Запущено (PID: {tg_pid})" if tg_ok else "Вимкнено"
+        tg_color = "green" if tg_ok else "red"
+        st.markdown(f"**Telegram Bot Daemon:** :{tg_color}[{tg_status_text}]")
+        
+        # Bot control buttons
+        btn_bot1, btn_bot2 = st.columns(2)
+        with btn_bot1:
+            if st.button("▶️ Запустити Telegram бота", disabled=tg_ok, use_container_width=True):
+                try:
+                    cmd = [sys.executable, os.path.join(SCRIPT_DIR, "run_telegram_bot.py")]
+                    p = subprocess.Popen(cmd, cwd=SCRIPT_DIR)
+                    pid_file = os.path.join(SCRATCH_DIR, "telegram_bot.pid")
+                    with open(pid_file, "w") as f:
+                        f.write(str(p.pid))
+                    time.sleep(1.0)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Помилка запуску бота: {e}")
+        with btn_bot2:
+            if st.button("⏹️ Зупинити Telegram бота", disabled=not tg_ok, use_container_width=True):
+                try:
+                    os.kill(tg_pid, signal.SIGTERM)
+                    time.sleep(1.0)
+                    if is_process_running(tg_pid):
+                        os.kill(tg_pid, signal.SIGKILL)
+                    pid_file = os.path.join(SCRATCH_DIR, "telegram_bot.pid")
+                    if os.path.exists(pid_file):
+                        os.remove(pid_file)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Помилка зупинки бота: {e}")
+
+    st.markdown("---")
+    
+    # Load agent state
+    state_file = os.path.join(SCRATCH_DIR, "agent_state.json")
+    agent_state = {}
+    if os.path.exists(state_file):
+        try:
+            with open(state_file, "r", encoding="utf-8") as f:
+                agent_state = json.load(f)
+        except:
+            pass
+            
+    agent_status = agent_state.get("status", "idle").upper()
+    
+    # State display
+    col_ag1, col_ag2 = st.columns([3, 1])
+    with col_ag1:
+        st.markdown(f"#### Поточний стан Оркестратора: `{agent_status}`")
+        if agent_state.get("error_msg"):
+            st.error(f"⚠️ Пайплайн зупинено розробником через помилку: {agent_state['error_msg']}")
+    with col_ag2:
+        is_running = agent_state.get("status") == "running"
+        
+        btn_pipe1, btn_pipe2 = st.columns(2)
+        with btn_pipe1:
+            if st.button("🚀 Запустити", disabled=is_running, type="primary", use_container_width=True):
+                try:
+                    cmd = [sys.executable, os.path.join(SCRIPT_DIR, "run_agents.py")]
+                    subprocess.Popen(cmd, cwd=SCRIPT_DIR)
+                    time.sleep(1.5)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Помилка: {e}")
+        with btn_pipe2:
+            if st.button("🛑 Зупинити", disabled=not is_running, type="secondary", use_container_width=True):
+                try:
+                    agent_state["status"] = "halted"
+                    agent_state["error_msg"] = "Stopped by user via dashboard"
+                    with open(state_file, "w", encoding="utf-8") as f:
+                        json.dump(agent_state, f, ensure_ascii=False, indent=2)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Помилка: {e}")
+
+    # Steps progress table
+    plan_steps = agent_state.get("plan", [])
+    if plan_steps:
+        st.markdown("##### 📋 План виконання субагентів")
+        step_data = []
+        for step in plan_steps:
+            icon = "⏳ Очікує"
+            if step["status"] == "completed":
+                icon = "✅ Завершено"
+            elif step["status"] == "running":
+                icon = "🚀 Виконується"
+            elif step["status"] == "failed":
+                icon = "❌ Помилка"
+                
+            step_data.append({
+                "ID": step["id"],
+                "Завдання (Субагент)": step["task"],
+                "Статус": icon,
+                "Деталі помилки": step.get("error", "-")
+            })
+        st.dataframe(pd.DataFrame(step_data), use_container_width=True, hide_index=True)
+    else:
+        st.info("План агентів ще не згенеровано. Натисніть кнопку 'Запустити' для ініціалізації.")
+
+with tab_import:
+    st.subheader("📝 Імпорт та виправлення тексту")
+    st.markdown("Введіть сирий текст українською мовою. Система виправить помилки через ШІ, порівняє слова з базою даних, автоматично згенерує парадигми словоформ для нових слів та ініціює інкрементальний пайплайн обробки.")
+    
+    user_text = st.text_area("Введіть текст для обробки:", height=150)
+    
+    if st.button("🚀 Обробити та імпортувати", type="primary"):
+        if not user_text.strip():
+            st.warning("Будь ласка, введіть текст.")
+        else:
+            with st.spinner("Агент Ingester перевіряє орфографію та імпортує нові слова..."):
+                from agents.spelling_ingester import SpellingIngester
+                ingester = SpellingIngester()
+                
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                res = loop.run_until_complete(ingester.process_user_text(user_text.strip()))
+                
+                if res.get("success"):
+                    st.success("Обробку та імпорт завершено!")
+                    st.markdown(f"**Виправлений текст:**\n_{res['corrected_text']}_")
+                    
+                    added = res.get("added_words", [])
+                    if added:
+                        st.info(f"🆕 **Додано нових слів (та їхні форми):**")
+                        for w in added:
+                            st.write(f"- {w}")
+                        
+                        st.info("🔄 Запущено автоматичний інкрементальний пайплайн (Класифікація -> Зв'язки -> Obsidian -> Neo4j)...")
+                        cmd = [sys.executable, os.path.join(SCRIPT_DIR, "run_agents.py")]
+                        subprocess.Popen(cmd, cwd=SCRIPT_DIR)
+                    else:
+                        st.info("Всі слова з тексту вже були присутні в словнику.")
+                else:
+                    st.error(f"Помилка імпорту: {res.get('error')}")
 
 with tab_run:
     st.subheader("⚙️ Керування фоновим процесом")
